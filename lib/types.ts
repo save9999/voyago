@@ -92,3 +92,43 @@ export interface Itinerary {
   days: ItineraryDay[];
   tips: string[];
 }
+
+export interface FlightSegment {
+  from: string;
+  to: string;
+  departure: string;
+  arrival: string;
+  carrier: string;
+  flightNumber: string;
+  durationMinutes: number;
+}
+
+export interface FlightTrip {
+  durationMinutes: number;
+  segments: FlightSegment[];
+}
+
+export interface FlightOffer {
+  id: string;
+  totalPriceEur: number;
+  stops: number;
+  totalDurationMinutes: number;
+  reasons: string[];
+  trips: FlightTrip[];
+  airlines: string[];
+}
+
+export interface TripPlan {
+  profile: TripProfile;
+  itinerary: { overview: string; days: ItineraryDay[]; tips: string[] };
+  flights: {
+    available: boolean;
+    originIata?: string;
+    destinationIata?: string;
+    offers: FlightOffer[];
+    fallbackUrl: string;
+    note?: string;
+  };
+  hotels: { searchUrl: string };
+  activities: { searchUrl: string };
+}
