@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { chat } from "@/lib/llm";
+import { chat, type JsonSchema } from "@/lib/llm";
 import { itinerarySchema } from "@/lib/schema";
 import {
   BUDGET_LABELS,
@@ -10,6 +10,30 @@ import {
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const ITINERARY_SCHEMA: JsonSchema = {
+  type: "object",
+  properties: {
+    overview: { type: "string" },
+    days: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          date: { type: "string" },
+          summary: { type: "string" },
+          morning: { type: "string" },
+          afternoon: { type: "string" },
+          evening: { type: "string" },
+          activities: { type: "array", items: { type: "string" } },
+        },
+        required: ["date", "summary", "activities"],
+      },
+    },
+    tips: { type: "array", items: { type: "string" } },
+  },
+  required: ["overview", "days", "tips"],
+};
 
 function buildPrompt(profile: TripProfile): string {
   const start = new Date(profile.startDate);
@@ -84,14 +108,14 @@ export async function POST(request: Request) {
 
   try {
     const raw = await chat({
-      jsonMode: true,
+      responseSchema: ITINERARY_SCHEMA,
       temperature: 0.7,
-      maxTokens: 4096,
+      maxTokens: 8192,
       messages: [
         {
           role: "system",
           content:
-            "Tu es un expert en planification de voyages francophones. Tu réponds toujours en français et exclusivement avec un objet JSON valide, sans markdown ni texte autour.",
+            "Tu es un expert en planification de voyages francophones. Tu réponds toujours en français.",
         },
         { role: "user", content: buildPrompt(profile) },
       ],

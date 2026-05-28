@@ -7,18 +7,29 @@ export interface ChatMessage {
   content: string;
 }
 
+export type JsonSchema = Record<string, unknown>;
+
 export interface ChatOptions {
   messages: ChatMessage[];
   temperature?: number;
   maxTokens?: number;
   jsonMode?: boolean;
+  responseSchema?: JsonSchema;
+}
+
+interface GeminiResponse {
+  candidates?: {
+    content?: { parts?: { text?: string }[] };
+    finishReason?: string;
+  }[];
 }
 
 export async function chat({
   messages,
   temperature = 0.7,
-  maxTokens = 4096,
+  maxTokens = 8192,
   jsonMode = false,
+  responseSchema,
 }: ChatOptions): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -27,6 +38,8 @@ export async function chat({
 
   const systemMessage = messages.find((m) => m.role === "system");
   const dialog = messages.filter((m) => m.role !== "system");
+
+  const useJson = jsonMode || !!responseSchema;
 
   const body = {
     contents: dialog.map((m) => ({
@@ -39,7 +52,8 @@ export async function chat({
     generationConfig: {
       temperature,
       maxOutputTokens: maxTokens,
-      ...(jsonMode ? { responseMimeType: "application/json" } : {}),
+      ...(useJson ? { responseMimeType: "application/json" } : {}),
+      ...(responseSchema ? { responseSchema } : {}),
     },
   };
 
@@ -54,13 +68,18 @@ export async function chat({
     throw new Error(`Gemini API ${res.status}: ${errText.slice(0, 300)}`);
   }
 
-  const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
+  const data = (await res.json()) as GeminiResponse;
+  const candidate = data.candidates?.[0];
+  const content = candidate?.content?.parts?.[0]?.text;
+  const finishReason = candidate?.finishReason;
 
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!content) {
-    throw new Error("Réponse Gemini vide");
+    throw new Error(`Réponse Gemini vide (finishReason=${finishReason ?? "inconnu"})`);
+  }
+  if (finishReason && finishReason !== "STOP") {
+    throw new Error(
+      `Génération interrompue (${finishReason}) — augmente maxTokens ou raccourcis le prompt`,
+    );
   }
   return content;
 }
