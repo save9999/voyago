@@ -5,8 +5,8 @@ import {
   searchIataCode,
   searchFlights,
   scoreFlights,
-  type AmadeusFlightOffer,
-} from "@/lib/amadeus";
+  type RawFlightOffer,
+} from "@/lib/duffel";
 import {
   buildBookingUrl,
   buildSkyscannerUrl,
@@ -24,7 +24,7 @@ import {
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const ORIGIN_IATA = process.env.AMADEUS_ORIGIN_IATA || "PAR";
+const ORIGIN_IATA = process.env.ORIGIN_IATA || "PAR";
 
 const ITINERARY_SCHEMA: JsonSchema = {
   type: "object",
@@ -111,7 +111,7 @@ function parseDurationToMinutes(iso: string): number {
 }
 
 function normalizeOffer(
-  offer: AmadeusFlightOffer,
+  offer: RawFlightOffer,
   reasons: string[],
   stops: number,
   totalDurationMinutes: number,
@@ -143,14 +143,13 @@ function normalizeOffer(
 async function fetchFlights(profile: TripProfile) {
   const fallbackUrl = buildSkyscannerUrl(profile, ORIGIN_IATA);
 
-  const hasCreds =
-    !!process.env.AMADEUS_CLIENT_ID && !!process.env.AMADEUS_CLIENT_SECRET;
+  const hasCreds = !!process.env.DUFFEL_API_TOKEN;
   if (!hasCreds) {
     return {
       available: false,
       offers: [],
       fallbackUrl,
-      note: "Configure AMADEUS_CLIENT_ID et AMADEUS_CLIENT_SECRET pour activer les vols en direct.",
+      note: "Configure DUFFEL_API_TOKEN pour activer les vols en direct.",
     };
   }
 
@@ -166,10 +165,7 @@ async function fetchFlights(profile: TripProfile) {
     }
 
     const youngChildren = profile.childrenAges.filter((a) => a < 12);
-    const infants = profile.childrenAges.filter((a) => a < 2).length;
-    const children = profile.childrenAges.filter(
-      (a) => a >= 2 && a < 12,
-    ).length;
+    const childAges = profile.childrenAges.filter((a) => a < 12);
     const adultsCombined =
       profile.adults + profile.childrenAges.filter((a) => a >= 12).length;
 
@@ -179,8 +175,7 @@ async function fetchFlights(profile: TripProfile) {
       departureDate: profile.startDate,
       returnDate: profile.endDate,
       adults: adultsCombined,
-      children,
-      infants,
+      childAges,
       max: 12,
     });
 
