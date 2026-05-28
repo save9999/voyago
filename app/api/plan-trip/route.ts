@@ -91,7 +91,7 @@ async function generateItinerary(profile: TripProfile) {
   const raw = await chat({
     responseSchema: ITINERARY_SCHEMA,
     temperature: 0.7,
-    maxTokens: 8192,
+    maxTokens: 32768,
     messages: [
       {
         role: "system",

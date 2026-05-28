@@ -15,6 +15,8 @@ export interface ChatOptions {
   maxTokens?: number;
   jsonMode?: boolean;
   responseSchema?: JsonSchema;
+  /** Budget de réflexion Gemini. 0 = désactivé (recommandé pour sortie JSON). */
+  thinkingBudget?: number;
 }
 
 interface GeminiResponse {
@@ -27,9 +29,10 @@ interface GeminiResponse {
 export async function chat({
   messages,
   temperature = 0.7,
-  maxTokens = 8192,
+  maxTokens = 32768,
   jsonMode = false,
   responseSchema,
+  thinkingBudget = 0,
 }: ChatOptions): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -52,6 +55,7 @@ export async function chat({
     generationConfig: {
       temperature,
       maxOutputTokens: maxTokens,
+      thinkingConfig: { thinkingBudget },
       ...(useJson ? { responseMimeType: "application/json" } : {}),
       ...(responseSchema ? { responseSchema } : {}),
     },
