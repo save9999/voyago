@@ -6,7 +6,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, ArrowRight } from "lucide-react";
+import { CalendarIcon, ArrowRight, Check, Plane } from "lucide-react";
 import { searchSchema, type SearchInput } from "@/lib/schema";
 import {
   TRIP_TYPE_LABELS,
@@ -90,6 +90,96 @@ function SectionHeading({
   );
 }
 
+const GENERATION_STEPS = [
+  "On affine ta destination",
+  "Recherche des meilleurs vols",
+  "Sélection des hébergements",
+  "Composition de l'itinéraire, jour par jour",
+  "Derniers ajustements",
+];
+
+function GenerationOverlay({ destination }: { destination: string }) {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    // On avance les étapes une à une, en ralentissant sur la dernière
+    // (la génération de l'itinéraire est la plus longue).
+    const id = setInterval(() => {
+      setStep((s) => Math.min(s + 1, GENERATION_STEPS.length - 1));
+    }, 4500);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 px-6 backdrop-blur-md">
+      <div className="w-full max-w-md space-y-8 text-center">
+        <div className="flex justify-center">
+          <span className="relative flex size-14 items-center justify-center rounded-full border border-[color:var(--ochre)]/30 text-[color:var(--ochre)]">
+            <Plane className="size-6 animate-pulse" />
+          </span>
+        </div>
+
+        <div className="space-y-1.5">
+          <h2 className="font-serif text-2xl font-medium tracking-tight">
+            On compose ton voyage
+          </h2>
+          {destination && (
+            <p className="text-sm text-muted-foreground">
+              Cap sur <span className="text-foreground">{destination}</span>
+            </p>
+          )}
+        </div>
+
+        <ul className="mx-auto max-w-xs space-y-3 text-left">
+          {GENERATION_STEPS.map((label, i) => {
+            const done = i < step;
+            const active = i === step;
+            return (
+              <li
+                key={label}
+                className={cn(
+                  "flex items-center gap-3 text-sm transition-all duration-500",
+                  done && "text-muted-foreground",
+                  active && "text-foreground",
+                  !done && !active && "text-muted-foreground/40",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors",
+                    done &&
+                      "border-[color:var(--ochre)] bg-[color:var(--ochre)] text-background",
+                    active &&
+                      "border-[color:var(--ochre)] text-[color:var(--ochre)]",
+                    !done && !active && "border-border",
+                  )}
+                >
+                  {done ? (
+                    <Check className="size-3" />
+                  ) : (
+                    <span
+                      className={cn(
+                        "size-1.5 rounded-full bg-current",
+                        active && "animate-pulse",
+                      )}
+                    />
+                  )}
+                </span>
+                {label}
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="text-xs text-muted-foreground/70">
+          Cela prend une vingtaine de secondes — on cherche le meilleur, pas le
+          premier résultat.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function SearchForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -167,6 +257,8 @@ export function SearchForm() {
   };
 
   return (
+    <>
+      {isSubmitting && <GenerationOverlay destination={watch("destination")} />}
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="relative w-full overflow-hidden rounded-3xl border bg-card/80 p-6 shadow-[0_1px_0_rgba(0,0,0,0.04),0_30px_60px_-30px_rgba(0,0,0,0.18)] backdrop-blur md:p-10"
@@ -467,5 +559,6 @@ export function SearchForm() {
         </Button>
       </div>
     </form>
+    </>
   );
 }
