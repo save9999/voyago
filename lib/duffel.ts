@@ -175,8 +175,9 @@ export async function searchFlights(
     ...(params.childAges ?? []).map((age) => ({ age })),
   ];
 
-  const res = await fetch(
-    `${DUFFEL_BASE}/air/offer_requests?return_offers=true`,
+  // Étape 1 : créer l'offer request sans rapatrier les offres (réponse légère).
+  const reqRes = await fetch(
+    `${DUFFEL_BASE}/air/offer_requests?return_offers=false`,
     {
       method: "POST",
       headers: authHeaders(),
@@ -186,16 +187,28 @@ export async function searchFlights(
     },
   );
 
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    throw new Error(`Duffel flight search ${res.status}: ${err.slice(0, 200)}`);
+  if (!reqRes.ok) {
+    const err = await reqRes.text().catch(() => "");
+    throw new Error(`Duffel flight search ${reqRes.status}: ${err.slice(0, 200)}`);
   }
 
-  const data = (await res.json()) as {
-    data?: { offers?: DuffelOffer[] };
-  };
-  const offers = data.data?.offers ?? [];
-  return offers.slice(0, params.max ?? 12).map(mapOffer);
+  const reqData = (await reqRes.json()) as { data?: { id?: string } };
+  const requestId = reqData.data?.id;
+  if (!requestId) return [];
+
+  // Étape 2 : ne récupérer que les N moins chères (payload borné, déjà triées).
+  const limit = params.max ?? 12;
+  const offersRes = await fetch(
+    `${DUFFEL_BASE}/air/offers?offer_request_id=${requestId}&limit=${limit}&sort=total_amount`,
+    { headers: authHeaders() },
+  );
+  if (!offersRes.ok) {
+    const err = await offersRes.text().catch(() => "");
+    throw new Error(`Duffel offers ${offersRes.status}: ${err.slice(0, 200)}`);
+  }
+
+  const data = (await offersRes.json()) as { data?: DuffelOffer[] };
+  return (data.data ?? []).map(mapOffer);
 }
 
 function parseDurationToMinutes(iso: string): number {
