@@ -186,7 +186,7 @@ function TripLeg({
 }) {
   return (
     <div className="space-y-2">
-      <div className="text-[0.7rem] uppercase tracking-wider text-muted-foreground">
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
       <div className="flex items-center gap-3">
@@ -299,15 +299,11 @@ export function TripPlanDisplay({ plan }: { plan: TripPlan }) {
                 <FlightCard key={offer.id} offer={offer} />
               ))}
             </div>
-            <a
+            <ExternalCTA
               href={flights.fallbackUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-            >
-              Voir plus de vols sur Skyscanner
-              <ArrowUpRight className="size-3.5" />
-            </a>
+              label="Voir plus de vols sur Skyscanner"
+              description="Comparer toutes les options disponibles"
+            />
           </>
         ) : (
           <div className="space-y-3">
@@ -405,15 +401,11 @@ export function TripPlanDisplay({ plan }: { plan: TripPlan }) {
         </ol>
 
         <div className="pt-2">
-          <a
+          <ExternalCTA
             href={activities.searchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-          >
-            Réserver les activités sur GetYourGuide
-            <ArrowUpRight className="size-3.5" />
-          </a>
+            label="Réserver les activités sur GetYourGuide"
+            description="Visites guidées, expériences et activités locales"
+          />
         </div>
       </section>
 

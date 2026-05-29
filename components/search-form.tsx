@@ -111,7 +111,11 @@ function GenerationOverlay({ destination }: { destination: string }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 px-6 backdrop-blur-md">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 px-6 backdrop-blur-md"
+    >
       <div className="w-full max-w-md space-y-8 text-center">
         <div className="flex justify-center">
           <span className="relative flex size-14 items-center justify-center rounded-full border border-[color:var(--ochre)]/30 text-[color:var(--ochre)]">
@@ -294,6 +298,7 @@ export function SearchForm() {
                 render={({ field }) => (
                   <Popover>
                     <PopoverTrigger
+                      aria-label="Date d'aller"
                       className={cn(
                         "flex h-11 w-full items-center justify-between rounded-lg border bg-background px-3 text-sm transition-colors hover:bg-muted",
                         !field.value && "text-muted-foreground",
@@ -340,6 +345,7 @@ export function SearchForm() {
                 render={({ field }) => (
                   <Popover>
                     <PopoverTrigger
+                      aria-label="Date de retour"
                       className={cn(
                         "flex h-11 w-full items-center justify-between rounded-lg border bg-background px-3 text-sm transition-colors hover:bg-muted",
                         !field.value && "text-muted-foreground",
@@ -447,13 +453,18 @@ export function SearchForm() {
                     key={i}
                     className="rounded-lg border bg-background/60 p-3"
                   >
-                    <span className="text-[0.7rem] uppercase tracking-wider text-muted-foreground">
+                    <span
+                      id={`child-age-label-${i}`}
+                      className="text-xs uppercase tracking-wider text-muted-foreground"
+                    >
                       Enfant {i + 1}
                     </span>
                     <Input
                       type="number"
                       min={0}
                       max={17}
+                      aria-labelledby={`child-age-label-${i}`}
+                      aria-label={`Âge de l'enfant ${i + 1}`}
                       className="mt-1 h-9 border-0 bg-transparent p-0 text-base focus-visible:ring-0"
                       {...register(`childrenAges.${i}` as const, {
                         valueAsNumber: true,

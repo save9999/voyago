@@ -1,23 +1,11 @@
-import Link from "next/link";
 import { SearchForm } from "@/components/search-form";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border/70">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
-          <Link
-            href="/"
-            className="font-serif text-lg font-medium tracking-tight"
-          >
-            Voyago<span className="text-[color:var(--ochre)]">.</span>
-          </Link>
-          <nav className="hidden gap-6 text-sm text-muted-foreground md:flex">
-            <span>Itinéraires sur-mesure</span>
-            <span>Vols & hébergement</span>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main className="flex-1">
         <section className="relative overflow-hidden">
@@ -53,12 +41,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-border/70">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 text-xs text-muted-foreground">
-          <span>© Voyago</span>
-          <span>fait avec soin</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
